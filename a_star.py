@@ -45,7 +45,6 @@ def f_cost(states,g_cost,h_cost):
     return np.concatenate((states, f_cost,g_cost,h_cost), axis=1)
 
 def state_finder(current_state,obstacles,state_space):
-    world = creating_world(obstacles,state_space)
     current_state = np.asarray(current_state)
     i=current_state[0]
     j=current_state[1]
