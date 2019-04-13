@@ -14,28 +14,39 @@
 import numpy as np
 import math
 import matplotlib.pyplot as plt
-#Feel free to change the State_space and Obstacles.
-obstacles = ((1,1),(1,2),(2,2),(3,2),(5,3),(6,3),(3,4),(2,4),(3,0),(5,1),(0,5),(2,6),(5,6))
-state_space = np.zeros((7,7))
-initial_state = [6.0,5.0]
-goal = [0.0,0.0]
-initial_state_g = 0
-initial_state_h =  np.linalg.norm(np.asarray(initial_state) - np.asarray(goal))
 
-def g_cost(prev_gcost,states,current_state):
+obstacles = ((2,1),(3,1),(4,1),(2,2),(2,3),(2,4),(3,4),(4,4))
+
+state_space = np.zeros((6,6))
+
+queue=np.array([])
+initial_state = [3.0,3.0]
+goal = [0.0,3.0]
+initial_state_g = 0
+initial_state_h =  np.linalg.norm(np.asarray(initial_state[0]) - np.asarray(goal[0]))+np.linalg.norm(np.asarray(initial_state[1]) - np.asarray(goal[1]))
+initial_state_f = initial_state_g+initial_state_h
+initial_set=np.asarray([3.0, 3.0 , initial_state_f, initial_state_g, initial_state_h])
+queue = initial_set[np.newaxis]
+
+def g_cost(prev_gcost,states,current_state,f_cost):
     g_cost = np.zeros((len(states),1))
+    f_cost = np.asarray(f_cost)
     for i in range(len(states)):
         action = np.linalg.norm(states[i,:]-current_state)
         if action == float(1):
             g_cost[i] = (prev_gcost + 1)
         else:
             g_cost[i] = (prev_gcost + math.sqrt(2)) 
+        for j in range(len(f_cost)):
+          if (states[i,0],states[i,1]) == (f_cost[j,0],f_cost[j,1]):
+              if g_cost[i] > f_cost[j,3]:
+                 g_cost[i] = f_cost[j,3]
     return g_cost
 
 def h_cost(states):
     h_cost = np.zeros((len(states),1))
     for i in range(len(states)):
-        h_cost[i] = np.linalg.norm(np.asarray(states[i,:])-np.asarray(goal))
+        h_cost[i] = np.linalg.norm(np.asarray(states[i,0])-np.asarray(goal[0]))+np.linalg.norm(np.asarray(states[i,1])-np.asarray(goal[1]))
     return h_cost
 
 def f_cost(states,g_cost,h_cost):
@@ -74,36 +85,77 @@ def state_finder(current_state,obstacles,state_space):
     return all_states
 
 def priority_queue(f_cost,closed_states):
-    print('closed node:',closed_states)
+    global queue
+    #print('q:',queue)
+    queue=np.append(queue,f_cost,axis=0)
     i=0
-    while (i < (len(f_cost[:,2]))):
-        if [f_cost[i,0],f_cost[i,1]] in (closed_states):
-           f_cost = np.delete(f_cost,i,0)
+    while (i < (len((queue[:,2])))):
+        if [queue[i,0],queue[i,1]] in (closed_states):
+           queue = np.delete(queue,i,0)
            i=0
         else:
           i=i+1
-    for i in range(len(f_cost[:,2])):
-        if f_cost[i,2] == np.min(f_cost[:,2]):
-            closed_states.append(list(f_cost[i,0:2]))
-            return f_cost[i,:]
+    for i in range(len(queue[:,2])):
+        if queue[i,2] == np.min(queue[:,2]):
+            closed_states.append(list(queue[i,0:2]))
+            #print('chossen:', queue[i,:])
+            return queue[i,:]
 
 current_state = initial_state
 prev_g_cost = initial_state_g
 save = []
 closed_states = []
 closed_states.append(current_state)
+f_cos = []
 while (current_state != goal):
-    print(current_state)
-    save.append(current_state)
     states = state_finder(current_state,obstacles,state_space)
-    g_cos = g_cost(prev_g_cost,states,current_state)
+    g_cos = g_cost(prev_g_cost,states,current_state,f_cos)
     h_cos = h_cost(states)
     f_cos = f_cost(states,g_cos,h_cos)
+    #print('f:',f_cos)
     f = priority_queue(f_cos,closed_states)
+    #print('ff:',f)
     current_state = list(f[: 2])
+    save.append(current_state)
     prev_g_cost = f[3]
-save.append(goal)
-#Printing world
+save.insert(0, initial_state)
+print(save)
+
+def back_track(save,initial_state):
+  end = len(save)-1
+  save_path=[]
+  save = np.asarray(save)
+  save_path.append(save[end,:])
+  save_path = np.asarray(save_path)
+  #save_path= np.append(save[1,:][np.newaxis],save_path,axis=0)
+  print(save_path.shape)
+  print(save[1,:].shape)
+  i=end
+  j=i-1
+  while(i>=0):
+    #if (save_path)
+    while(j>=0):
+      print('j value:',j)
+      if abs(math.sqrt(2)-(np.linalg.norm(save[i,:]-save[j,:]))) < 0.00001 or abs(np.linalg.norm(save[i,:]-save[j,:])) == 1: #or abs(np.linalg.norm(save[i,:]-save[end,:])) == 0:
+        get =j
+      j=j-1
+    print('i,get:',i,get)  
+    print('for i:',i)
+      #print(math.sqrt(2)-(np.linalg.norm(save[i,:]-save[j,:])))
+    save_path= np.append(save[get,:][np.newaxis],save_path,axis=0)
+    i=get
+    j=i-1
+    if get ==0:
+      break
+    #print(i,j)
+      #else:
+        #j=j-1
+        #print('in')
+  print (save_path)
+  return save_path
+
+save = back_track(save,initial_state)
+
 obstacles = np.asarray(obstacles)
 initial_state = np.asarray(initial_state)
 goal = np.asarray(goal)
