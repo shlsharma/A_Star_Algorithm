@@ -127,30 +127,23 @@ def back_track(save,initial_state):
   save = np.asarray(save)
   save_path.append(save[end,:])
   save_path = np.asarray(save_path)
-  #save_path= np.append(save[1,:][np.newaxis],save_path,axis=0)
   print(save_path.shape)
   print(save[1,:].shape)
   i=end
   j=i-1
   while(i>=0):
-    #if (save_path)
     while(j>=0):
       print('j value:',j)
-      if abs(math.sqrt(2)-(np.linalg.norm(save[i,:]-save[j,:]))) < 0.00001 or abs(np.linalg.norm(save[i,:]-save[j,:])) == 1: #or abs(np.linalg.norm(save[i,:]-save[end,:])) == 0:
+      if abs(math.sqrt(2)-(np.linalg.norm(save[i,:]-save[j,:]))) < 0.00001 or abs(np.linalg.norm(save[i,:]-save[j,:])) == 1: 
         get =j
       j=j-1
-    print('i,get:',i,get)  
-    print('for i:',i)
-      #print(math.sqrt(2)-(np.linalg.norm(save[i,:]-save[j,:])))
+    #print('i,get:',i,get)  
+    #print('for i:',i)
     save_path= np.append(save[get,:][np.newaxis],save_path,axis=0)
     i=get
     j=i-1
     if get ==0:
       break
-    #print(i,j)
-      #else:
-        #j=j-1
-        #print('in')
   print (save_path)
   return save_path
 
