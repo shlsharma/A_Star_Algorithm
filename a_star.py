@@ -26,6 +26,7 @@ initial_state_g = 0
 initial_state_h =  np.linalg.norm(np.asarray(initial_state[0]) - np.asarray(goal[0]))+np.linalg.norm(np.asarray(initial_state[1]) - np.asarray(goal[1]))
 initial_state_f = initial_state_g+initial_state_h
 initial_set=np.asarray([3.0, 3.0 , initial_state_f, initial_state_g, initial_state_h])
+initial_list=list(initial_set)
 queue = initial_set[np.newaxis]
 
 def g_cost(prev_gcost,states,current_state,f_cost):
@@ -86,7 +87,6 @@ def state_finder(current_state,obstacles,state_space):
 
 def priority_queue(f_cost,closed_states):
     global queue
-    #print('q:',queue)
     queue=np.append(queue,f_cost,axis=0)
     i=0
     while (i < (len((queue[:,2])))):
@@ -98,7 +98,6 @@ def priority_queue(f_cost,closed_states):
     for i in range(len(queue[:,2])):
         if queue[i,2] == np.min(queue[:,2]):
             closed_states.append(list(queue[i,0:2]))
-            #print('chossen:', queue[i,:])
             return queue[i,:]
 
 current_state = initial_state
@@ -112,33 +111,31 @@ while (current_state != goal):
     g_cos = g_cost(prev_g_cost,states,current_state,f_cos)
     h_cos = h_cost(states)
     f_cos = f_cost(states,g_cos,h_cos)
-    #print('f:',f_cos)
     f = priority_queue(f_cos,closed_states)
-    #print('ff:',f)
     current_state = list(f[: 2])
-    save.append(current_state)
+    ff= list(f)
+    save.append(ff)
     prev_g_cost = f[3]
-save.insert(0, initial_state)
+save.insert(0, initial_list)
 print(save)
 
-def back_track(save,initial_state):
+def back_track(save_list,initial_state):
+  def sortSecond(val): 
+    return val[3]  
+  save_list.sort(key = sortSecond)
+  save_list = np.asarray(save_list)
+  save = save_list[:,0:2]
   end = len(save)-1
   save_path=[]
-  save = np.asarray(save)
   save_path.append(save[end,:])
   save_path = np.asarray(save_path)
-  print(save_path.shape)
-  print(save[1,:].shape)
   i=end
   j=i-1
   while(i>=0):
     while(j>=0):
-      print('j value:',j)
-      if abs(math.sqrt(2)-(np.linalg.norm(save[i,:]-save[j,:]))) < 0.00001 or abs(np.linalg.norm(save[i,:]-save[j,:])) == 1: 
+      if abs(math.sqrt(2)-(np.linalg.norm(save[i,:]-save[j,:]))) < 0.00001 or abs(np.linalg.norm(save[i,:]-save[j,:])) == 1: #or abs(np.linalg.norm(save[i,:]-save[end,:])) == 0:
         get =j
       j=j-1
-    #print('i,get:',i,get)  
-    #print('for i:',i)
     save_path= np.append(save[get,:][np.newaxis],save_path,axis=0)
     i=get
     j=i-1
